@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shuffle, BookOpen, RotateCcw, Trophy, Check, X, HelpCircle, Keyboard, ArrowRight, Volume2, VolumeX, Link, Gamepad2, Brain, Layers, Target, FileType } from 'lucide-react';
+import { BookOpen, RotateCcw, Trophy, Check, X, HelpCircle, Keyboard, ArrowRight, Volume2, VolumeX, Link, Brain } from 'lucide-react';
 
 // --- DỮ LIỆU TỪ VỰNG ---
 const rawData = [
@@ -37,7 +37,7 @@ export default function App() {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const audioRef = useRef(null);
 
-  // Thêm CSS động cho hiệu ứng lật thẻ và rung
+  // Thêm CSS động cho hiệu ứng
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
