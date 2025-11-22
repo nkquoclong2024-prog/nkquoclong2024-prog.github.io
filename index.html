@@ -1,0 +1,697 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Shuffle, BookOpen, RotateCcw, Trophy, Check, X, HelpCircle, Keyboard, ArrowRight, Volume2, VolumeX, Link } from 'lucide-react';
+
+// Danh sách từ vựng gốc (Đã thêm loại từ 'pos')
+const rawData = [
+  { id: 1, en: "terrace", vi: "sân thượng", pos: "noun (danh từ)" },
+  { id: 2, en: "gourmet", vi: "sành ăn", pos: "adj (tính từ)" },
+  { id: 3, en: "suitcase", vi: "va li", pos: "noun (danh từ)" },
+  { id: 4, en: "cupboard", vi: "cái tủ đầu giường", pos: "noun (danh từ)" },
+  { id: 5, en: "petrol station", vi: "trạm đổ xăng", pos: "noun (danh từ)" },
+  { id: 6, en: "station", vi: "ga tàu", pos: "noun (danh từ)" },
+  { id: 7, en: "pray", vi: "cầu nguyện", pos: "verb (động từ)" },
+  { id: 8, en: "letters", vi: "lá thư", pos: "noun (danh từ)" },
+  { id: 9, en: "medicine", vi: "thuốc", pos: "noun (danh từ)" },
+  { id: 10, en: "mayor", vi: "thị trưởng", pos: "noun (danh từ)" },
+  { id: 11, en: "rent", vi: "thuê", pos: "verb (động từ)" },
+  { id: 12, en: "interval", vi: "khoảng nghỉ", pos: "noun (danh từ)" },
+  { id: 13, en: "perfume", vi: "nước hoa", pos: "noun (danh từ)" },
+  { id: 14, en: "property", vi: "làm về nhà đất / tài sản", pos: "noun (danh từ)" },
+  { id: 15, en: "thick", vi: "dày", pos: "adj (tính từ)" },
+  { id: 16, en: "hard", vi: "cứng / khó", pos: "adj (tính từ)" },
+  { id: 17, en: "scooter", vi: "xe cỡ nhỏ / xe ga", pos: "noun (danh từ)" },
+  { id: 18, en: "awful", vi: "tồi tệ", pos: "adj (tính từ)" },
+  { id: 19, en: "big pot of coffee", vi: "một ấm cà phê lớn", pos: "noun phrase (cụm danh từ)" }
+];
+
+// --- AUDIO RESOURCES ---
+const MUSIC_URL = "https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-664.mp3";
+const SFX_CORRECT = "https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3";
+const SFX_WRONG = "https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3";
+const SFX_CLICK = "https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3";
+const SFX_WIN = "https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3";
+
+export default function VocabularyGame() {
+  const [mode, setMode] = useState('menu'); 
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  // Khởi tạo Audio Nhạc nền
+  useEffect(() => {
+    audioRef.current = new Audio(MUSIC_URL);
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.2; 
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleMusic = () => {
+    if (!audioRef.current) return;
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    } else {
+      audioRef.current.play().catch(e => console.log("Playback error:", e));
+      setIsMusicPlaying(true);
+    }
+  };
+
+  const playSfx = (type) => {
+    let url = "";
+    switch (type) {
+      case 'correct': url = SFX_CORRECT; break;
+      case 'wrong': url = SFX_WRONG; break;
+      case 'click': url = SFX_CLICK; break;
+      case 'win': url = SFX_WIN; break;
+      default: return;
+    }
+    const audio = new Audio(url);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  };
+  
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      {/* Header */}
+      <header className="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <h1 className="text-lg md:text-2xl font-bold flex items-center gap-2 truncate">
+            <BookOpen className="w-6 h-6 flex-shrink-0" />
+            Vocabulary Quiz Show
+          </h1>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={toggleMusic}
+              className={`p-2 rounded-full transition text-white border ${isMusicPlaying ? 'bg-indigo-500 border-indigo-400' : 'bg-indigo-700 border-indigo-600 opacity-70'}`}
+              title={isMusicPlaying ? "Tắt nhạc" : "Bật nhạc"}
+            >
+              {isMusicPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+
+            {mode !== 'menu' && (
+              <button 
+                onClick={() => setMode('menu')}
+                className="text-xs md:text-sm bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded-lg transition border border-indigo-500"
+              >
+                Trang chủ
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto p-4 min-h-[80vh]">
+        {mode === 'menu' && <Menu setMode={setMode} playSfx={playSfx} />}
+        {mode === 'study' && <StudyMode data={rawData} playSfx={playSfx} />}
+        {mode === 'memory' && <MemoryGameMode data={rawData} playSfx={playSfx} />}
+        {mode === 'match' && <MatchMode data={rawData} playSfx={playSfx} />}
+        {mode === 'quiz' && <QuizMode data={rawData} playSfx={playSfx} />}
+        {mode === 'typing' && <TypingMode data={rawData} playSfx={playSfx} />}
+      </main>
+    </div>
+  );
+}
+
+// --- Màn hình Menu ---
+function Menu({ setMode, playSfx }) {
+  const menuItems = [
+    { id: 'study', title: 'Học Flashcard', desc: 'Có phát âm & loại từ', icon: <BookOpen size={24} />, color: 'indigo' },
+    { id: 'memory', title: 'Ghép Thẻ Nhớ', desc: 'Lật hình tìm cặp giống nhau', icon: <Shuffle size={24} />, color: 'emerald' },
+    { id: 'match', title: 'Nối Từ', desc: 'Nối từ Anh với nghĩa Việt', icon: <Link size={24} />, color: 'sky' },
+    { id: 'quiz', title: 'Trắc Nghiệm', desc: 'Chọn 1 đáp án đúng trong 4', icon: <HelpCircle size={24} />, color: 'orange' },
+    { id: 'typing', title: 'Luyện Gõ', desc: 'Gõ lại từ tiếng Anh', icon: <Keyboard size={24} />, color: 'rose' },
+  ];
+
+  return (
+    <div className="flex flex-col items-center justify-center mt-6 gap-6 animate-fade-in">
+      <div className="text-center mb-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-indigo-900 mb-2">Sàn đấu từ vựng</h2>
+        <p className="text-slate-500">Chọn thử thách của bạn!</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl">
+        {menuItems.map((item) => (
+          <button 
+            key={item.id}
+            onClick={() => { playSfx('click'); setMode(item.id); }}
+            className={`group relative overflow-hidden bg-white border-2 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 text-left flex items-start gap-4
+              ${item.color === 'indigo' ? 'border-indigo-100 hover:border-indigo-500' : ''}
+              ${item.color === 'emerald' ? 'border-emerald-100 hover:border-emerald-500' : ''}
+              ${item.color === 'sky' ? 'border-sky-100 hover:border-sky-500' : ''}
+              ${item.color === 'orange' ? 'border-orange-100 hover:border-orange-500' : ''}
+              ${item.color === 'rose' ? 'border-rose-100 hover:border-rose-500' : ''}
+            `}
+          >
+            <div className={`
+              w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
+              ${item.color === 'indigo' ? 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white' : ''}
+              ${item.color === 'emerald' ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' : ''}
+              ${item.color === 'sky' ? 'bg-sky-100 text-sky-600 group-hover:bg-sky-600 group-hover:text-white' : ''}
+              ${item.color === 'orange' ? 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : ''}
+              ${item.color === 'rose' ? 'bg-rose-100 text-rose-600 group-hover:bg-rose-600 group-hover:text-white' : ''}
+            `}>
+              {item.icon}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">{item.title}</h3>
+              <p className="text-slate-500 text-sm mt-1">{item.desc}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Chế độ 1: Flashcards (Đã cập nhật phát âm + POS) ---
+function StudyMode({ data, playSfx }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const currentWord = data[currentIndex];
+
+  const nextCard = () => {
+    playSfx('click');
+    setIsFlipped(false);
+    setTimeout(() => setCurrentIndex((prev) => (prev + 1) % data.length), 200);
+  };
+  
+  const prevCard = () => {
+    playSfx('click');
+    setIsFlipped(false);
+    setTimeout(() => setCurrentIndex((prev) => (prev - 1 + data.length) % data.length), 200);
+  };
+
+  const handleFlip = () => {
+    playSfx('click');
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleSpeak = (e, text) => {
+    e.stopPropagation(); // Ngăn chặn lật thẻ khi bấm vào loa
+    
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9; // Đọc hơi chậm một chút cho dễ nghe
+      window.speechSynthesis.speak(utterance);
+    } else {
+      alert("Trình duyệt của bạn không hỗ trợ đọc âm thanh.");
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center mt-6 max-w-xl mx-auto">
+      <div className="w-full mb-4 flex justify-between text-slate-500 text-sm">
+        <span>Thẻ {currentIndex + 1}/{data.length}</span>
+        <span>Chạm để lật</span>
+      </div>
+      
+      <div onClick={handleFlip} className="perspective-1000 w-full h-72 cursor-pointer group">
+        <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+          
+          {/* Mặt trước (Tiếng Anh + Loa) */}
+          <div className="absolute inset-0 backface-hidden bg-white border-2 border-indigo-200 rounded-3xl shadow-lg flex flex-col items-center justify-center p-6 relative">
+            <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-4">Tiếng Anh</span>
+            <h3 className="text-4xl font-bold text-slate-800 text-center mb-6">{currentWord.en}</h3>
+            
+            {/* Nút Loa - Đã thêm class 'right-6' để dịch sang phải */}
+            <button 
+              onClick={(e) => handleSpeak(e, currentWord.en)}
+              className="absolute bottom-6 right-6 w-12 h-12 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center transition shadow-sm hover:scale-110"
+              title="Nghe phát âm"
+            >
+              <Volume2 size={24} />
+            </button>
+          </div>
+
+          {/* Mặt sau (Tiếng Việt + Loại từ) */}
+          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-indigo-600 text-white rounded-3xl shadow-lg flex flex-col items-center justify-center p-6">
+            <span className="text-xs font-bold text-indigo-200 uppercase tracking-wider mb-2">Nghĩa Tiếng Việt</span>
+            
+            {/* Loại từ */}
+            <span className="inline-block px-3 py-1 bg-indigo-700 rounded-full text-xs md:text-sm font-mono text-indigo-200 mb-3 border border-indigo-500">
+              {currentWord.pos}
+            </span>
+            
+            <h3 className="text-3xl font-bold text-center">{currentWord.vi}</h3>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="flex gap-4 mt-8 w-full">
+        <button onClick={prevCard} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 font-semibold text-slate-600">Quay lại</button>
+        <button onClick={nextCard} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-semibold shadow-lg shadow-indigo-200">Tiếp theo</button>
+      </div>
+    </div>
+  );
+}
+
+// --- Chế độ 2: Memory Game (Lật hình) ---
+function MemoryGameMode({ data, playSfx }) {
+  const [cards, setCards] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [matched, setMatched] = useState([]);
+  const [moves, setMoves] = useState(0);
+  const [won, setWon] = useState(false);
+
+  useEffect(() => startNewGame(), []);
+
+  const startNewGame = () => {
+    const subset = [...data].sort(() => 0.5 - Math.random()).slice(0, 6);
+    const deck = subset.flatMap(item => [
+      { id: item.id, content: item.en, type: 'en', key: `${item.id}-en` },
+      { id: item.id, content: item.vi, type: 'vi', key: `${item.id}-vi` }
+    ]).sort(() => 0.5 - Math.random());
+    setCards(deck);
+    setFlipped([]);
+    setMatched([]);
+    setMoves(0);
+    setWon(false);
+  };
+
+  const handleClick = (card) => {
+    if (won || flipped.length >= 2 || flipped.includes(card) || matched.includes(card.id)) return;
+    
+    playSfx('click');
+    const newFlipped = [...flipped, card];
+    setFlipped(newFlipped);
+    
+    if (newFlipped.length === 2) {
+      setMoves(m => m + 1);
+      if (newFlipped[0].id === newFlipped[1].id) {
+        playSfx('correct');
+        setMatched(m => [...m, newFlipped[0].id]);
+        setFlipped([]);
+        if (matched.length + 1 === cards.length / 2) {
+          setTimeout(() => { playSfx('win'); setWon(true); }, 500);
+        }
+      } else {
+        setTimeout(() => { playSfx('wrong'); setFlipped([]); }, 1000);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="flex justify-between w-full max-w-2xl mb-4">
+        <span className="font-bold text-slate-600">Số lượt: {moves}</span>
+        <button onClick={() => { playSfx('click'); startNewGame();}} className="text-emerald-600 font-bold flex gap-2 items-center"><RotateCcw size={18}/> Chơi lại</button>
+      </div>
+      
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 w-full max-w-2xl">
+        {cards.map(card => {
+          const isOpen = flipped.includes(card) || matched.includes(card.id);
+          const isMatch = matched.includes(card.id);
+          return (
+            <div key={card.key} onClick={() => handleClick(card)} 
+              className={`aspect-[4/3] flex items-center justify-center text-center p-2 rounded-xl cursor-pointer transition-all duration-300 transform hover:scale-105 shadow-sm
+                ${isMatch ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-200 opacity-60' : 
+                  isOpen ? 'bg-emerald-600 text-white shadow-md' : 'bg-white border-2 border-slate-200 text-transparent hover:border-emerald-200'}
+              `}>
+              <span className={isOpen ? 'text-xs sm:text-sm font-semibold animate-fade-in' : 'hidden'}>{card.content}</span>
+            </div>
+          );
+        })}
+      </div>
+      
+      {won && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl text-center animate-bounce-in max-w-sm w-full">
+            <Trophy size={48} className="mx-auto text-yellow-500 mb-4"/>
+            <h2 className="text-2xl font-bold mb-2">Chiến thắng!</h2>
+            <p className="mb-6 text-slate-500">Bạn chỉ mất {moves} lượt để hoàn thành.</p>
+            <button onClick={() => { playSfx('click'); startNewGame();}} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700">Chơi ván mới</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Chế độ 3: Match Mode (Nối từ) ---
+function MatchMode({ data, playSfx }) {
+  const [leftItems, setLeftItems] = useState([]);
+  const [rightItems, setRightItems] = useState([]);
+  const [selected, setSelected] = useState(null); 
+  const [matched, setMatched] = useState([]); 
+  const [wrongPair, setWrongPair] = useState([]); 
+  const [won, setWon] = useState(false);
+
+  useEffect(() => startNewGame(), []);
+
+  const startNewGame = () => {
+    const subset = [...data].sort(() => 0.5 - Math.random()).slice(0, 5);
+    setLeftItems([...subset].sort(() => 0.5 - Math.random()));
+    setRightItems([...subset].sort(() => 0.5 - Math.random()));
+    setMatched([]);
+    setSelected(null);
+    setWrongPair([]);
+    setWon(false);
+  };
+
+  const handleSelect = (item, side) => {
+    if (matched.includes(item.id) || wrongPair.length > 0) return;
+
+    playSfx('click');
+
+    if (!selected) {
+      setSelected({ id: item.id, side });
+      return;
+    }
+
+    if (selected.id === item.id && selected.side === side) {
+      setSelected(null);
+      return;
+    }
+
+    if (selected.side === side) {
+      setSelected({ id: item.id, side });
+      return;
+    }
+
+    if (selected.id === item.id) {
+      playSfx('correct');
+      const newMatched = [...matched, item.id];
+      setMatched(newMatched);
+      setSelected(null);
+      
+      if (newMatched.length === leftItems.length) {
+        setTimeout(() => { playSfx('win'); setWon(true); }, 500);
+      }
+    } else {
+      playSfx('wrong');
+      setWrongPair([selected.id, item.id]); 
+      setSelected(null);
+      setTimeout(() => setWrongPair([]), 800); 
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center w-full">
+      <div className="flex justify-between w-full max-w-3xl mb-4 px-2">
+        <span className="font-bold text-slate-600">Ghép cặp đúng</span>
+        <button onClick={() => { playSfx('click'); startNewGame();}} className="text-sky-600 font-bold flex gap-2 items-center"><RotateCcw size={18}/> Đổi từ khác</button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-3xl">
+        <div className="flex flex-col gap-3">
+          {leftItems.map(item => {
+            const isMatched = matched.includes(item.id);
+            const isSelected = selected?.id === item.id && selected?.side === 'left';
+            const isWrong = wrongPair.includes(item.id) && !isMatched; 
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleSelect(item, 'left')}
+                disabled={isMatched}
+                className={`
+                  p-3 md:p-4 rounded-xl border-2 text-center font-medium transition-all duration-300 relative
+                  ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+                  ${isSelected 
+                    ? 'bg-sky-100 border-sky-500 text-sky-800 scale-105 shadow-md z-10' 
+                    : 'bg-white border-slate-200 hover:border-sky-300'}
+                  ${isWrong ? 'animate-shake bg-red-50 border-red-400 text-red-600' : ''}
+                `}
+              >
+                {item.en}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {rightItems.map(item => {
+            const isMatched = matched.includes(item.id);
+            const isSelected = selected?.id === item.id && selected?.side === 'right';
+            const isWrong = wrongPair.includes(item.id) && !isMatched;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleSelect(item, 'right')}
+                disabled={isMatched}
+                className={`
+                  p-3 md:p-4 rounded-xl border-2 text-center font-medium transition-all duration-300
+                  ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+                  ${isSelected 
+                    ? 'bg-sky-100 border-sky-500 text-sky-800 scale-105 shadow-md z-10' 
+                    : 'bg-white border-slate-200 hover:border-sky-300'}
+                  ${isWrong ? 'animate-shake bg-red-50 border-red-400 text-red-600' : ''}
+                `}
+              >
+                {item.vi}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {won && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl text-center animate-bounce-in max-w-sm w-full">
+            <Trophy size={48} className="mx-auto text-yellow-500 mb-4"/>
+            <h2 className="text-2xl font-bold mb-2">Xuất sắc!</h2>
+            <p className="mb-6 text-slate-500">Bạn đã nối đúng tất cả các cặp.</p>
+            <button onClick={() => { playSfx('click'); startNewGame();}} className="w-full py-3 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700">Chơi tiếp</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Chế độ 4: Trắc Nghiệm (Quiz) ---
+function QuizMode({ data, playSfx }) {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [score, setScore] = useState(0);
+  const [questions, setQuestions] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => restartQuiz(), []);
+
+  const restartQuiz = () => {
+    const shuffled = [...data].sort(() => 0.5 - Math.random());
+    const qs = shuffled.map(item => {
+      const distractors = data.filter(d => d.id !== item.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+      const options = [...distractors, item].sort(() => 0.5 - Math.random());
+      return { target: item, options };
+    });
+    setQuestions(qs);
+    setCurrentQ(0);
+    setScore(0);
+    setSelected(null);
+    setIsCorrect(null);
+    setFinished(false);
+  };
+
+  const handleSelect = (option) => {
+    if (selected) return; 
+    setSelected(option);
+    const correct = option.id === questions[currentQ].target.id;
+    setIsCorrect(correct);
+    
+    if (correct) {
+      playSfx('correct');
+      setScore(s => s + 1);
+    } else {
+      playSfx('wrong');
+    }
+  };
+
+  const nextQuestion = () => {
+    playSfx('click');
+    if (currentQ + 1 < questions.length) {
+      setCurrentQ(c => c + 1);
+      setSelected(null);
+      setIsCorrect(null);
+    } else {
+      playSfx('win');
+      setFinished(true);
+    }
+  };
+
+  if (questions.length === 0) return <div>Loading...</div>;
+  if (finished) return (
+    <div className="text-center max-w-md mx-auto mt-10 p-8 bg-white rounded-3xl shadow-lg">
+      <Trophy size={56} className="mx-auto text-orange-500 mb-4" />
+      <h2 className="text-2xl font-bold text-slate-800">Kết quả</h2>
+      <p className="text-lg text-slate-600 mt-2">Bạn đúng <span className="font-bold text-orange-600">{score}/{questions.length}</span> câu.</p>
+      <button onClick={() => { playSfx('click'); restartQuiz();}} className="mt-8 w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition">Làm lại bài thi</button>
+    </div>
+  );
+
+  const q = questions[currentQ];
+
+  return (
+    <div className="max-w-xl mx-auto flex flex-col gap-6 mt-4">
+      <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+        <div className="bg-orange-500 h-full transition-all duration-300" style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }}></div>
+      </div>
+
+      <div className="bg-white p-8 rounded-2xl shadow-sm text-center border-2 border-orange-50">
+        <span className="text-xs font-bold text-orange-400 uppercase">Câu hỏi {currentQ + 1}</span>
+        <h3 className="text-2xl font-bold text-slate-800 mt-2 mb-6">"{q.target.vi}" nghĩa tiếng Anh là gì?</h3>
+        
+        <div className="grid grid-cols-1 gap-3">
+          {q.options.map((opt) => {
+            let btnClass = "p-4 rounded-xl border-2 font-medium transition-all text-left relative ";
+            if (selected) {
+              if (opt.id === q.target.id) btnClass += "bg-green-100 border-green-500 text-green-800 "; 
+              else if (opt === selected && opt.id !== q.target.id) btnClass += "bg-red-100 border-red-500 text-red-800 "; 
+              else btnClass += "bg-slate-50 border-slate-100 opacity-50 ";
+            } else {
+              btnClass += "bg-white border-slate-200 hover:border-orange-300 hover:bg-orange-50 cursor-pointer";
+            }
+
+            return (
+              <button key={opt.id} onClick={() => handleSelect(opt)} className={btnClass} disabled={!!selected}>
+                {opt.en}
+                {selected && opt.id === q.target.id && <Check size={20} className="absolute right-4 top-4 text-green-600"/>}
+                {selected && opt === selected && opt.id !== q.target.id && <X size={20} className="absolute right-4 top-4 text-red-600"/>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {selected && (
+        <button onClick={nextQuestion} className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 shadow-lg flex items-center justify-center gap-2 animate-fade-in">
+          {currentQ + 1 === questions.length ? "Xem kết quả" : "Câu tiếp theo"} <ArrowRight size={20}/>
+        </button>
+      )}
+    </div>
+  );
+}
+
+// --- Chế độ 5: Luyện Gõ (Typing) ---
+function TypingMode({ data, playSfx }) {
+  const [queue, setQueue] = useState([]);
+  const [input, setInput] = useState('');
+  const [status, setStatus] = useState('waiting'); 
+  const [showHint, setShowHint] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setQueue([...data].sort(() => 0.5 - Math.random()).slice(0, 10));
+  }, []);
+
+  const currentWord = queue[0];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!currentWord) return;
+
+    if (input.trim().toLowerCase() === currentWord.en.toLowerCase()) {
+      playSfx('correct');
+      setStatus('correct');
+      setTimeout(() => {
+        setQueue(prev => prev.slice(1));
+        setInput('');
+        setStatus('waiting');
+        setShowHint(false);
+      }, 1000);
+    } else {
+      playSfx('wrong');
+      setStatus('wrong');
+    }
+  };
+
+  const handleGiveUp = () => {
+    playSfx('click');
+    setInput(currentWord.en);
+    setStatus('giveup'); 
+    setTimeout(() => {
+        setQueue(prev => prev.slice(1));
+        setInput('');
+        setStatus('waiting');
+        setShowHint(false);
+      }, 1500);
+  }
+
+  if (queue.length === 0) return (
+    <div className="text-center mt-10 animate-fade-in">
+      <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-500">
+        <Check size={40} />
+      </div>
+      <h2 className="text-2xl font-bold text-slate-800">Hoàn thành!</h2>
+      <p className="text-slate-500 mb-6">Bạn đã luyện gõ hết bộ từ này.</p>
+      <button onClick={() => window.location.reload()} className="px-6 py-2 bg-slate-800 text-white rounded-lg">Về trang chủ</button>
+    </div>
+  );
+
+  return (
+    <div className="max-w-md mx-auto mt-6 flex flex-col gap-6">
+      <div className="text-center mb-2">
+        <span className="text-sm font-bold text-rose-400 uppercase tracking-widest">Thử thách chính tả</span>
+        <div className="text-xs text-slate-400 mt-1">Còn lại: {queue.length} từ</div>
+      </div>
+
+      <div className="bg-white p-8 rounded-3xl shadow-lg border-b-4 border-slate-100 text-center relative overflow-hidden">
+        {status === 'correct' && <div className="absolute inset-0 bg-green-100 flex items-center justify-center text-green-700 font-bold text-xl animate-fade-in">Chính xác! 🎉</div>}
+        
+        <h3 className="text-xl text-slate-500 mb-2">Hãy gõ từ tiếng Anh cho:</h3>
+        <p className="text-3xl font-bold text-slate-800 mb-6">"{currentWord.vi}"</p>
+
+        {showHint && (
+          <div className="mb-4 text-sm text-rose-500 font-mono bg-rose-50 p-2 rounded inline-block">
+             Gợi ý: {currentWord.en.charAt(0)}...{currentWord.en.slice(-1)} ({currentWord.en.length} kí tự)
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="relative">
+          <input 
+            ref={inputRef}
+            type="text" 
+            value={input}
+            onChange={(e) => { setInput(e.target.value); setStatus('waiting'); }}
+            className={`w-full p-4 text-center text-lg font-bold border-2 rounded-xl outline-none transition-colors
+              ${status === 'wrong' ? 'border-red-400 bg-red-50 text-red-600' : 'border-slate-200 focus:border-rose-400 focus:bg-rose-50'}
+            `}
+            placeholder="Nhập từ tiếng Anh..."
+            autoFocus
+          />
+          <button type="submit" className="absolute right-2 top-2 bottom-2 bg-rose-500 hover:bg-rose-600 text-white px-4 rounded-lg font-bold transition">
+            Gửi
+          </button>
+        </form>
+
+        <div className="flex justify-center gap-4 mt-6">
+            <button onClick={() => { playSfx('click'); setShowHint(true);}} className="text-sm text-slate-400 hover:text-rose-500 underline">Xem gợi ý</button>
+            <span className="text-slate-300">|</span>
+            <button onClick={handleGiveUp} className="text-sm text-slate-400 hover:text-slate-600 underline">Bỏ qua từ này</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const style = document.createElement('style');
+style.textContent = `
+  .perspective-1000 { perspective: 1000px; }
+  .transform-style-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
+  .rotate-y-180 { transform: rotateY(180deg); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+  @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+  .animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+`;
+document.head.appendChild(style);
