@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Shuffle, BookOpen, RotateCcw, Trophy, Check, X, HelpCircle, Keyboard, ArrowRight, Volume2, VolumeX, Link, Gamepad2, Brain, Layers, Target, FileType } from 'lucide-react';
 
-// --- DATA SOURCE ---
+// --- DỮ LIỆU TỪ VỰNG ---
 const rawData = [
   { id: 1, en: "terrace", vi: "sân thượng", pos: "noun (danh từ)" },
   { id: 2, en: "gourmet", vi: "sành ăn", pos: "adj (tính từ)" },
@@ -24,20 +24,20 @@ const rawData = [
   { id: 19, en: "big pot of coffee", vi: "một ấm cà phê lớn", pos: "noun phrase (cụm danh từ)" }
 ];
 
-// --- AUDIO RESOURCES ---
+// --- TÀI NGUYÊN ÂM THANH ---
 const MUSIC_URL = "https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-664.mp3";
 const SFX_CORRECT = "https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3";
 const SFX_WRONG = "https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3";
 const SFX_CLICK = "https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3";
 const SFX_WIN = "https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3";
 
-// --- MAIN COMPONENT ---
+// --- COMPONENT CHÍNH ---
 export default function App() {
   const [mode, setMode] = useState('menu');
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const audioRef = useRef(null);
 
-  // Inject Custom Styles
+  // Thêm CSS động cho hiệu ứng lật thẻ và rung
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -58,7 +58,7 @@ export default function App() {
     };
   }, []);
 
-  // Audio Init
+  // Khởi tạo nhạc nền
   useEffect(() => {
     audioRef.current = new Audio(MUSIC_URL);
     audioRef.current.loop = true;
@@ -77,7 +77,7 @@ export default function App() {
       audioRef.current.pause();
       setIsMusicPlaying(false);
     } else {
-      audioRef.current.play().catch(e => console.log("Playback error:", e));
+      audioRef.current.play().catch(e => console.log("Lỗi phát nhạc:", e));
       setIsMusicPlaying(true);
     }
   };
@@ -153,7 +153,7 @@ export default function App() {
   );
 }
 
-// --- COMPONENTS ---
+// --- CÁC COMPONENT CON ---
 
 function Menu({ setMode, playSfx }) {
   const menuItems = [
