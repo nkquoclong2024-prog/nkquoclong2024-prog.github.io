@@ -6,7 +6,6 @@
     <title>VocabMaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
         .perspective-1000 { perspective: 1000px; }
         .preserve-3d { transform-style: preserve-3d; }
@@ -18,9 +17,8 @@
             75% { transform: translateX(5px); }
         }
         .animate-shake { animation: shake 0.3s ease-in-out; }
-        
-        /* Utility classes for hiding elements */
-        .hidden-view { display: none !important; }
+        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-100">
@@ -30,653 +28,705 @@
             <h1 class="text-2xl font-bold text-indigo-600 flex items-center gap-2">
                 <i data-lucide="book" class="w-6 h-6"></i> VocabMaster
             </h1>
-            <nav class="flex flex-wrap justify-center gap-2 bg-slate-100 p-1 rounded-lg" id="nav-tabs">
-                </nav>
+            <nav class="flex flex-wrap justify-center gap-2 bg-slate-100 p-1 rounded-lg" id="nav-container">
+                <button onclick="switchTab('list')" id="tab-list" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-slate-500 hover:text-slate-700">
+                    <i data-lucide="list" class="w-4 h-4"></i> <span class="hidden sm:inline">Danh sách</span>
+                </button>
+                <button onclick="switchTab('flashcard')" id="tab-flashcard" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-slate-500 hover:text-slate-700">
+                    <i data-lucide="brain" class="w-4 h-4"></i> <span class="hidden sm:inline">Flashcard</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-slate-500 hover:text-slate-700">
+                    <i data-lucide="trophy" class="w-4 h-4"></i> <span class="hidden sm:inline">Trắc nghiệm</span>
+                </button>
+                <button onclick="switchTab('write')" id="tab-write" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-slate-500 hover:text-slate-700">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> <span class="hidden sm:inline">Luyện viết</span>
+                </button>
+            </nav>
         </div>
     </header>
 
-    <main class="max-w-3xl mx-auto px-4 py-8" id="main-content">
+    <main id="app-main" class="max-w-3xl mx-auto px-4 py-8">
         </main>
     
     <footer class="text-center py-6 text-slate-400 text-sm">
         Học mỗi ngày để nâng cao vốn từ vựng của bạn!
     </footer>
 
-    <script>
-        // --- DATA ---
-        const vocabularyData = [
-            { id: 1, word: "Carry on", meaning: "Tiếp tục", type: "phrasal verb", example: "Please carry on with your work." },
-            { id: 2, word: "Purse", meaning: "Cái ví", type: "noun", example: "She left her purse at home." },
-            { id: 3, word: "Pests", meaning: "Sâu bệnh", type: "noun", example: "Farmers use sprays to kill pests." },
-            { id: 4, word: "Paws", meaning: "Bàn chân (động vật)", type: "noun", example: "The cat licked its paws." },
-            { id: 5, word: "Toes", meaning: "Ngón chân", type: "noun", example: "He stepped on my toes." },
-            { id: 6, word: "Whiskers", meaning: "Râu (động vật)", type: "noun", example: "The cat has long whiskers." },
-            { id: 7, word: "Tongue", meaning: "Lưỡi", type: "noun", example: "The dog was panting with its tongue out." },
-            { id: 8, word: "Envy", meaning: "Ghen tị", type: "verb", example: "I envy your success." },
-            { id: 9, word: "Variety", meaning: "Đa dạng", type: "noun", example: "We need more variety in our diet." },
-            { id: 10, word: "Beneficial", meaning: "Có ích, có lợi", type: "adj", example: "Exercise is beneficial to health." },
-            { id: 11, word: "Domestic", meaning: "Trong gia đình, quốc nội", type: "adj", example: "They took a domestic flight." },
-            { id: 12, word: "Partnership", meaning: "Sự hợp tác", type: "noun", example: "They work in close partnership." },
-            { id: 13, word: "Illegal", meaning: "Vi phạm pháp luật", type: "adj", example: "It is illegal to park here." },
-            { id: 14, word: "Leash", meaning: "Dây xích", type: "noun", example: "Keep your dog on a leash." },
-            { id: 15, word: "Medical conditions", meaning: "Điều kiện về y tế", type: "noun phrase", example: "He has some underlying medical conditions." },
-            { id: 16, word: "Melted", meaning: "Tan chảy", type: "adj", example: "The melted snow turned into water." },
-            { id: 17, word: "Pay rent", meaning: "Trả tiền thuê nhà", type: "phrase", example: "I have to pay rent every month." },
-            { id: 18, word: "Furniture", meaning: "Nội thất", type: "noun", example: "We need to buy new furniture." },
-            { id: 19, word: "Gas stove", meaning: "Bếp ga", type: "noun", example: "She cooks on a gas stove." },
-            { id: 20, word: "Water pipe", meaning: "Ống nước", type: "noun", example: "The water pipe is leaking." },
-            { id: 21, word: "Electrician", meaning: "Thợ sửa điện", type: "noun", example: "Call an electrician to fix the wiring." },
-            { id: 22, word: "Plumber", meaning: "Thợ sửa ống nước", type: "noun", example: "The plumber fixed the sink." },
-            { id: 23, word: "Socket", meaning: "Ổ cắm điện", type: "noun", example: "Plug the charger into the socket." },
-            { id: 24, word: "Sparking", meaning: "Phát ra tia lửa", type: "verb", example: "The broken wire is sparking." },
-            { id: 25, word: "Frame", meaning: "Khung", type: "noun", example: "He put the picture in a wooden frame." },
-            { id: 26, word: "Scratches", meaning: "Vết xước", type: "noun", example: "There are scratches on my phone screen." },
-            { id: 27, word: "Opportunity", meaning: "Cơ hội", type: "noun", example: "This is a great opportunity for you." },
-            { id: 28, word: "Bungalow", meaning: "Nhà 1 lầu", type: "noun", example: "They live in a beautiful bungalow." },
-            { id: 29, word: "Detached house", meaning: "Nhà riêng biệt", type: "noun", example: "A detached house offers more privacy." },
-            { id: 30, word: "Terraced house", meaning: "Nhà liền kề", type: "noun", example: "They bought a terraced house in the city." },
-            { id: 31, word: "Cottage", meaning: "Nhà bé bé xinh xinh", type: "noun", example: "We stayed in a lovely country cottage." },
-            { id: 32, word: "Semi-detached house", meaning: "Một nửa nhà sát vách", type: "noun", example: "She lives in a semi-detached house." },
-            { id: 33, word: "Tidy", meaning: "Dọn dẹp", type: "verb", example: "Please tidy your room." },
-            { id: 34, word: "Microwave", meaning: "Lò vi sóng", type: "noun", example: "Heat the soup in the microwave." }
-        ];
+<script>
+// --- Dữ liệu ---
+const vocabularyData = [
+  { id: 1, word: "Accomplish", meaning: "Đạt được", type: "verb", example: "She accomplished her goals." },
+  { id: 2, word: "Hold", meaning: "Tổ chức", type: "verb", example: "They will hold a meeting tomorrow." },
+  { id: 3, word: "Pursue", meaning: "Theo đuổi", type: "verb", example: "He wants to pursue his dreams." },
+  { id: 4, word: "Millionaire", meaning: "Triệu phú", type: "noun", example: "She became a millionaire at 30." },
+  { id: 5, word: "Instead", meaning: "Thay vào đó", type: "adv", example: "Let's go to the park instead." },
+  { id: 6, word: "Speech", meaning: "Bài phát biểu", type: "noun", example: "He gave a wonderful speech." },
+  { id: 7, word: "Offer", meaning: "Đề nghị", type: "verb", example: "They offered me a good job." },
+  { id: 8, word: "Complain", meaning: "Than phiền", type: "verb", example: "She always complains about the weather." },
+  { id: 9, word: "Ambition", meaning: "Tham vọng", type: "noun", example: "His ambition is to run his own company." },
+  { id: 10, word: "Spontaneous", meaning: "Đột ngột, tự phát", type: "adj", example: "It was a spontaneous decision." },
+  { id: 11, word: "Decided", meaning: "Quyết định", type: "verb", example: "They decided to stay at home." },
+  { id: 12, word: "Driving licence", meaning: "Bằng lái xe", type: "noun phrase", example: "I just got my driving licence." },
+  { id: 13, word: "Glad", meaning: "Vui vẻ, hạnh phúc", type: "adj", example: "I am very glad to see you." },
+  { id: 14, word: "Incredible", meaning: "Không thể tin được", type: "adj", example: "That is an incredible story." },
+  { id: 15, word: "Dedicated", meaning: "Tận tụy", type: "adj", example: "She is a highly dedicated teacher." },
+  { id: 16, word: "Occupation", meaning: "Nghề nghiệp", type: "noun", example: "What is your current occupation?" },
+  { id: 17, word: "Frequent", meaning: "Thường xuyên", type: "adj", example: "He is a frequent traveler." },
+  { id: 18, word: "Vote", meaning: "Bỏ phiếu", type: "verb", example: "Remember to vote in the next election." },
+  { id: 19, word: "Concrete", meaning: "Xi măng, bê tông", type: "noun", example: "The floor is made of solid concrete." },
+  { id: 20, word: "Straw", meaning: "Rơm", type: "noun", example: "The roof of the hut was made of straw." },
+  { id: 21, word: "Netting", meaning: "Lưới", type: "noun", example: "They put up wire netting around the garden." },
+  { id: 22, word: "Pillar", meaning: "Trụ, cột", type: "noun", example: "Two large pillars support the roof." },
+  { id: 23, word: "Roof", meaning: "Mái nhà", type: "noun", example: "The cat is climbing on the roof." },
+  { id: 24, word: "Reinforce", meaning: "Gia cố, làm bền hơn", type: "verb", example: "We need to reinforce the bridge." },
+  { id: 25, word: "Likely", meaning: "Có xu hướng", type: "adj", example: "It is likely to rain this afternoon." },
+  { id: 26, word: "Collapse", meaning: "Sụp đổ", type: "verb", example: "The old building collapsed during the storm." },
+  { id: 27, word: "Methods", meaning: "Phương pháp", type: "noun", example: "They are testing new teaching methods." },
+  { id: 28, word: "Attic", meaning: "Gác mái", type: "noun", example: "We found old photos in the attic." },
+  { id: 29, word: "Spacious", meaning: "Rộng rãi", type: "adj", example: "The living room is very spacious." },
+  { id: 30, word: "Cramped", meaning: "Chật hẹp", type: "adj", example: "They lived in a cramped apartment." },
+  { id: 31, word: "Complimented", meaning: "Được khen ngợi", type: "verb (passive)", example: "He was complimented on his excellent work." },
+  { id: 32, word: "Provide", meaning: "Cung cấp", type: "verb", example: "The hotel provides free breakfast." },
+  { id: 33, word: "Estate agent", meaning: "Môi giới bất động sản", type: "noun", example: "The estate agent showed us several houses." },
+  { id: 34, word: "Property", meaning: "Tài sản", type: "noun", example: "This building is private property." },
+  { id: 35, word: "Move with the times", meaning: "Bắt kịp với thời đại", type: "phrase", example: "We need to move with the times and use new technology." },
+  { id: 36, word: "Make a mess", meaning: "Làm bừa bộn", type: "phrase", example: "Don't make a mess in the kitchen." },
+  { id: 37, word: "Do the housework", meaning: "Làm việc nhà", type: "phrase", example: "I usually do the housework on weekends." },
+  { id: 38, word: "Move house", meaning: "Chuyển nhà", type: "phrase", example: "We are going to move house next month." },
+  { id: 39, word: "Take a break", meaning: "Nghỉ ngơi", type: "phrase", example: "Let's take a break and have some coffee." },
+  { id: 40, word: "Take a bath", meaning: "Đi tắm", type: "phrase", example: "I like to take a warm bath before bed." },
+  { id: 41, word: "Make your bed", meaning: "Dọn dẹp giường", type: "phrase", example: "Always make your bed in the morning." },
+  { id: 42, word: "Do the dishes", meaning: "Rửa bát", type: "phrase", example: "It's your turn to do the dishes tonight." },
+  { id: 43, word: "Spread", meaning: "Lan rộng", type: "verb", example: "The news spread very quickly." }
+];
 
-        // --- GLOBAL STATE ---
-        let activeTab = 'list';
-        let selectedWordIds = vocabularyData.map(w => w.id);
-        
-        const tabs = [
-            { id: 'list', icon: 'list', label: 'Danh sách' },
-            { id: 'flashcard', icon: 'brain', label: 'Flashcard' },
-            { id: 'quiz', icon: 'trophy', label: 'Trắc nghiệm' },
-            { id: 'write', icon: 'pen-tool', label: 'Luyện viết' }
-        ];
+// --- Trạng thái toàn cục (Global State) ---
+let activeTab = 'list';
+let selectedWordIds = vocabularyData.map(w => w.id);
 
-        // --- UTILS ---
-        const speak = (text) => {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        };
+// --- Tiện ích ---
+const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+};
 
-        const getStudyData = () => vocabularyData.filter(w => selectedWordIds.includes(w.id));
-        
-        const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5);
+const getStudyData = () => vocabularyData.filter(w => selectedWordIds.includes(w.id));
+const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5);
 
-        // --- RENDER APP ---
-        function renderNav() {
-            const navContainer = document.getElementById('nav-tabs');
-            navContainer.innerHTML = tabs.map(tab => `
-                <button
-                    onclick="switchTab('${tab.id}')"
-                    class="px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                        activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                    }"
-                >
-                    <i data-lucide="${tab.icon}" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">${tab.label}</span>
+// --- Điều hướng ---
+function switchTab(tab) {
+    activeTab = tab;
+    // Cập nhật UI menu
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+        btn.classList.add('text-slate-500');
+    });
+    const activeBtn = document.getElementById(`tab-${tab}`);
+    activeBtn.classList.remove('text-slate-500');
+    activeBtn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+
+    renderMain();
+}
+
+function renderMain() {
+    const main = document.getElementById('app-main');
+    main.innerHTML = '';
+    
+    if (activeTab === 'list') renderListView(main);
+    else if (activeTab === 'flashcard') renderFlashcardView(main);
+    else if (activeTab === 'quiz') renderQuizView(main);
+    else if (activeTab === 'write') renderWritingView(main);
+
+    lucide.createIcons();
+}
+
+// Global keyboard event handler for Flashcard
+window.addEventListener('keydown', (e) => {
+    if (activeTab !== 'flashcard') return;
+    if (e.key === 'ArrowRight') fcNext();
+    if (e.key === 'ArrowLeft') fcPrev();
+    if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        fcToggleFlip();
+    }
+});
+
+
+// ==========================================
+// VIEW 1: LIST
+// ==========================================
+function renderListView(container) {
+    const html = `
+        <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-slate-700">Danh sách từ vựng</h2>
+                    <p class="text-sm text-slate-500">Đã chọn: <span class="font-bold text-indigo-600" id="list-count">${selectedWordIds.length}</span> / ${vocabularyData.length} từ</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="listSelectAll()" class="px-3 py-1.5 text-sm font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition-colors">Chọn tất cả</button>
+                    <button onclick="listDeselectAll()" class="px-3 py-1.5 text-sm font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition-colors">Bỏ chọn hết</button>
+                </div>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2" id="list-grid">
+                ${vocabularyData.map(item => getWordCardHTML(item)).join('')}
+            </div>
+        </div>
+    `;
+    container.innerHTML = html;
+}
+
+function getWordCardHTML(item) {
+    const isSelected = selectedWordIds.includes(item.id);
+    const bgClass = isSelected ? 'border-indigo-400 bg-indigo-50/30' : 'border-slate-100 hover:border-indigo-200';
+    const checkBgClass = isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300';
+    const textClass = isSelected ? 'text-indigo-700' : 'text-slate-700';
+    const checkIcon = isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : '';
+
+    return `
+        <div onclick="listToggleWord(${item.id})" id="word-card-${item.id}" class="bg-white p-5 rounded-xl shadow-sm border-2 cursor-pointer transition-all group ${bgClass}">
+            <div class="flex justify-between items-start">
+                <div class="flex gap-3 items-start">
+                    <div id="word-check-${item.id}" class="mt-1 w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${checkBgClass}">
+                        ${checkIcon}
+                    </div>
+                    <div>
+                        <h3 id="word-title-${item.id}" class="text-lg font-bold ${textClass}">${item.word}</h3>
+                        <span class="text-xs font-mono text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">${item.type}</span>
+                    </div>
+                </div>
+                <button onclick="event.stopPropagation(); speak('${item.word.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-500 transition-colors p-1 rounded-full hover:bg-indigo-100" title="Nghe phát âm">
+                    <i data-lucide="volume-2" class="w-5 h-5"></i>
                 </button>
-            `).join('');
-            lucide.createIcons();
-        }
+            </div>
+            <div class="pl-8">
+                <p class="mt-2 text-slate-800 font-medium">${item.meaning}</p>
+                <p class="mt-2 text-sm text-slate-500 italic border-l-2 border-indigo-100 pl-2">"${item.example}"</p>
+            </div>
+        </div>
+    `;
+}
 
-        function switchTab(tabId) {
-            activeTab = tabId;
-            renderNav();
-            renderMainContent();
-        }
+function listToggleWord(id) {
+    if (selectedWordIds.includes(id)) {
+        selectedWordIds = selectedWordIds.filter(i => i !== id);
+    } else {
+        selectedWordIds.push(id);
+    }
+    // Update DOM (thay vì re-render toàn bộ để mượt hơn)
+    const container = document.getElementById('list-grid');
+    if (container) renderListView(document.getElementById('app-main'));
+    lucide.createIcons();
+}
 
-        function renderMainContent() {
-            const container = document.getElementById('main-content');
-            container.innerHTML = ''; 
+function listSelectAll() {
+    selectedWordIds = vocabularyData.map(w => w.id);
+    renderListView(document.getElementById('app-main'));
+    lucide.createIcons();
+}
 
-            if (activeTab === 'list') renderListView(container);
-            if (activeTab === 'flashcard') renderFlashcardView(container);
-            if (activeTab === 'quiz') renderQuizView(container);
-            if (activeTab === 'write') renderWritingView(container);
+function listDeselectAll() {
+    selectedWordIds = [];
+    renderListView(document.getElementById('app-main'));
+    lucide.createIcons();
+}
 
-            lucide.createIcons();
-        }
 
-        // --- 1. LIST VIEW ---
-        function renderListView(container) {
-            const listHTML = `
-                <div class="space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                        <div>
-                            <h2 class="text-xl font-semibold text-slate-700">Danh sách từ vựng</h2>
-                            <p class="text-sm text-slate-500">Đã chọn: <span class="font-bold text-indigo-600">${selectedWordIds.length}</span> / ${vocabularyData.length} từ</p>
+// ==========================================
+// VIEW 2: FLASHCARD
+// ==========================================
+let fcCards = [];
+let fcCurrentIndex = 0;
+let fcIsFlipped = false;
+
+function renderFlashcardView(container) {
+    fcCards = getStudyData();
+    fcCurrentIndex = 0;
+    fcIsFlipped = false;
+    updateFlashcardDOM(container);
+}
+
+function updateFlashcardDOM(container = document.getElementById('app-main')) {
+    if (fcCards.length === 0) {
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 text-slate-500">
+                <i data-lucide="book" class="w-16 h-16 mb-4 text-slate-300"></i>
+                <p class="text-lg font-medium">Bạn chưa chọn từ vựng nào.</p>
+                <p class="text-sm mt-2">Vui lòng quay lại tab Danh sách để tích chọn từ cần học.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const currentCard = fcCards[fcCurrentIndex];
+    const flipClass = fcIsFlipped ? 'rotate-y-180' : '';
+
+    container.innerHTML = `
+        <div class="flex flex-col items-center justify-center min-h-[60vh]">
+            <div class="w-full max-w-md mb-6 flex justify-between items-center text-sm text-slate-500">
+                <span class="font-medium">Thẻ ${fcCurrentIndex + 1} / ${fcCards.length}</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="fcShuffle()" class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors" title="Xáo trộn thứ tự thẻ">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i> Xáo trộn
+                    </button>
+                    <span class="hidden sm:inline text-xs bg-slate-100 px-2 py-1 rounded">Space để lật</span>
+                </div>
+            </div>
+
+            <div class="relative w-full max-w-md h-80 cursor-pointer perspective-1000 group" onclick="fcToggleFlip()">
+                <div class="relative w-full h-full duration-500 preserve-3d transition-transform ${flipClass}">
+                    <div class="absolute w-full h-full backface-hidden bg-white rounded-2xl shadow-xl border-2 border-indigo-50 flex flex-col items-center justify-center p-8 text-center hover:border-indigo-200 transition-colors">
+                        <span class="absolute top-4 right-4 text-xs font-bold text-indigo-400 uppercase tracking-wider">Tiếng Anh</span>
+                        <h2 class="text-4xl font-bold text-indigo-700 mb-4">${currentCard.word}</h2>
+                        <div class="mt-4 p-3 bg-indigo-50 rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors" onclick="event.stopPropagation(); speak('${currentCard.word.replace(/'/g, "\\'")}')">
+                            <i data-lucide="volume-2" class="w-6 h-6"></i>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="selectAll()" class="px-3 py-1.5 text-sm font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition-colors">Chọn tất cả</button>
-                            <button onclick="deselectAll()" class="px-3 py-1.5 text-sm font-medium bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md transition-colors">Bỏ chọn hết</button>
-                        </div>
+                        <p class="mt-8 text-slate-400 text-sm">Nhấn để xem nghĩa</p>
                     </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        ${vocabularyData.map(item => {
-                            const isSelected = selectedWordIds.includes(item.id);
-                            return `
-                                <div 
-                                    onclick="toggleWord(${item.id})"
-                                    class="bg-white p-5 rounded-xl shadow-sm border-2 cursor-pointer transition-all group ${isSelected ? 'border-indigo-400 bg-indigo-50/30' : 'border-slate-100 hover:border-indigo-200'}"
-                                >
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex gap-3 items-start">
-                                            <div class="mt-1 w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'}">
-                                                ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
-                                            </div>
-                                            <div>
-                                                <h3 class="text-lg font-bold ${isSelected ? 'text-indigo-700' : 'text-slate-700'}">${item.word}</h3>
-                                                <span class="text-xs font-mono text-slate-400 bg-white px-2 py-0.5 rounded-full border border-slate-100">${item.type}</span>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onclick="event.stopPropagation(); speak('${item.word.replace(/'/g, "\\'")}')"
-                                            class="text-slate-400 hover:text-indigo-500 transition-colors p-1 rounded-full hover:bg-indigo-100"
-                                            title="Nghe phát âm"
-                                        >
-                                            <i data-lucide="volume-2" class="w-5 h-5"></i>
-                                        </button>
-                                    </div>
-                                    <div class="pl-8">
-                                        <p class="mt-2 text-slate-800 font-medium">${item.meaning}</p>
-                                        <p class="mt-2 text-sm text-slate-500 italic border-l-2 border-indigo-100 pl-2">"${item.example}"</p>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
+
+                    <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-indigo-600 rounded-2xl shadow-xl flex flex-col items-center justify-center p-8 text-center text-white">
+                        <span class="absolute top-4 right-4 text-xs font-bold text-indigo-200 uppercase tracking-wider">Tiếng Việt</span>
+                        <h2 class="text-3xl font-bold mb-2">${currentCard.meaning}</h2>
+                        <p class="text-indigo-200 font-mono text-sm mb-6">(${currentCard.type})</p>
+                        <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
+                            <p class="italic text-lg">"${currentCard.example}"</p>
+                        </div>
                     </div>
                 </div>
-            `;
-            container.innerHTML = listHTML;
-        }
+            </div>
 
-        window.toggleWord = (id) => {
-            if (selectedWordIds.includes(id)) {
-                selectedWordIds = selectedWordIds.filter(i => i !== id);
-            } else {
-                selectedWordIds.push(id);
-            }
-            renderMainContent();
-        };
+            <div class="flex gap-4 mt-8">
+                <button onclick="fcPrev()" class="p-3 rounded-full bg-white shadow-md text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-95">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <button onclick="fcToggleFlip()" class="px-6 py-3 rounded-full bg-indigo-600 shadow-md text-white font-medium hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2">
+                    <i data-lucide="rotate-cw" class="w-5 h-5"></i> Lật thẻ
+                </button>
+                <button onclick="fcNext()" class="p-3 rounded-full bg-white shadow-md text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-95">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    lucide.createIcons();
+}
 
-        window.selectAll = () => {
-            selectedWordIds = vocabularyData.map(w => w.id);
-            renderMainContent();
-        };
+function fcToggleFlip() {
+    fcIsFlipped = !fcIsFlipped;
+    updateFlashcardDOM();
+}
 
-        window.deselectAll = () => {
-            selectedWordIds = [];
-            renderMainContent();
-        };
+function fcNext() {
+    fcIsFlipped = false;
+    updateFlashcardDOM();
+    setTimeout(() => {
+        fcCurrentIndex = (fcCurrentIndex + 1) % fcCards.length;
+        updateFlashcardDOM();
+    }, 150);
+}
 
-        // --- 2. FLASHCARD VIEW ---
-        let fcData = [];
-        let fcIndex = 0;
-        let fcFlipped = false;
+function fcPrev() {
+    fcIsFlipped = false;
+    updateFlashcardDOM();
+    setTimeout(() => {
+        fcCurrentIndex = (fcCurrentIndex - 1 + fcCards.length) % fcCards.length;
+        updateFlashcardDOM();
+    }, 150);
+}
 
-        function renderFlashcardView(container) {
-            fcData = getStudyData();
-            if (fcData.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-20 text-slate-500">
-                        <i data-lucide="book" class="w-16 h-16 mb-4 text-slate-300"></i>
-                        <p class="text-lg font-medium">Bạn chưa chọn từ vựng nào.</p>
-                        <p class="text-sm mt-2">Vui lòng quay lại tab Danh sách để tích chọn từ cần học.</p>
-                    </div>`;
-                return;
-            }
+function fcShuffle() {
+    fcCards = shuffleArray(fcCards);
+    fcCurrentIndex = 0;
+    fcIsFlipped = false;
+    updateFlashcardDOM();
+}
 
-            // Fix index if bounds changed
-            if (fcIndex >= fcData.length) fcIndex = 0;
-            const currentCard = fcData[fcIndex];
 
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center min-h-[60vh]">
-                    <div class="w-full max-w-md mb-6 flex justify-between items-center text-sm text-slate-500">
-                        <span class="font-medium">Thẻ ${fcIndex + 1} / ${fcData.length}</span>
-                        <div class="flex items-center gap-3">
-                            <button onclick="fcShuffle()" class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors" title="Xáo trộn thứ tự thẻ">
-                                <i data-lucide="shuffle" class="w-4 h-4"></i> Xáo trộn
-                            </button>
-                            <span class="hidden sm:inline text-xs bg-slate-100 px-2 py-1 rounded">Space để lật</span>
-                        </div>
-                    </div>
+// ==========================================
+// VIEW 3: QUIZ
+// ==========================================
+let qzData = [];
+let qzCurrentQuestion = 0;
+let qzScore = 0;
+let qzShowScore = false;
+let qzOptions = [];
+let qzSelectedOption = null;
 
-                    <div class="relative w-full max-w-md h-80 cursor-pointer perspective-1000 group" onclick="fcToggleFlip()">
-                        <div id="fc-card-inner" class="relative w-full h-full duration-500 preserve-3d transition-transform ${fcFlipped ? 'rotate-y-180' : ''}">
-                            <div class="absolute w-full h-full backface-hidden bg-white rounded-2xl shadow-xl border-2 border-indigo-50 flex flex-col items-center justify-center p-8 text-center hover:border-indigo-200 transition-colors">
-                                <span class="absolute top-4 right-4 text-xs font-bold text-indigo-400 uppercase tracking-wider">Tiếng Anh</span>
-                                <h2 class="text-4xl font-bold text-indigo-700 mb-4">${currentCard.word}</h2>
-                                <div onclick="event.stopPropagation(); speak('${currentCard.word.replace(/'/g, "\\'")}')" class="mt-4 p-3 bg-indigo-50 rounded-full text-indigo-600 hover:bg-indigo-100 transition-colors">
-                                    <i data-lucide="volume-2" class="w-6 h-6"></i>
-                                </div>
-                                <p class="mt-8 text-slate-400 text-sm">Nhấn để xem nghĩa</p>
-                            </div>
+function renderQuizView(container) {
+    qzData = getStudyData();
+    qzCurrentQuestion = 0;
+    qzScore = 0;
+    qzShowScore = false;
+    qzSelectedOption = null;
+    generateQuizOptions();
+    updateQuizDOM(container);
+}
 
-                            <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-indigo-600 rounded-2xl shadow-xl flex flex-col items-center justify-center p-8 text-center text-white">
-                                <span class="absolute top-4 right-4 text-xs font-bold text-indigo-200 uppercase tracking-wider">Tiếng Việt</span>
-                                <h2 class="text-3xl font-bold mb-2">${currentCard.meaning}</h2>
-                                <p class="text-indigo-200 font-mono text-sm mb-6">(${currentCard.type})</p>
-                                <div class="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
-                                    <p class="italic text-lg">"${currentCard.example}"</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+function generateQuizOptions() {
+    if (qzData.length > 0 && qzCurrentQuestion < qzData.length) {
+        const currentWord = qzData[qzCurrentQuestion];
+        // Lấy toàn bộ data (thay vì chỉ studyData) để tạo câu hỏi đánh lừa phong phú hơn
+        const distractors = vocabularyData
+            .filter(item => item.id !== currentWord.id)
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 3);
+        qzOptions = shuffleArray([currentWord, ...distractors]);
+        qzSelectedOption = null;
+    }
+}
 
-                    <div class="flex gap-4 mt-8">
-                        <button onclick="fcPrev()" class="p-3 rounded-full bg-white shadow-md text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-95">
-                            <i data-lucide="chevron-left" class="w-6 h-6"></i>
-                        </button>
-                        <button onclick="fcToggleFlip()" class="px-6 py-3 rounded-full bg-indigo-600 shadow-md text-white font-medium hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-2">
-                            <i data-lucide="rotate-cw" class="w-5 h-5"></i> Lật thẻ
-                        </button>
-                        <button onclick="fcNext()" class="p-3 rounded-full bg-white shadow-md text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all active:scale-95">
-                            <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                        </button>
-                    </div>
+function updateQuizDOM(container = document.getElementById('app-main')) {
+    if (qzData.length === 0) {
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 text-slate-500">
+                <i data-lucide="trophy" class="w-16 h-16 mb-4 text-slate-300"></i>
+                <p class="text-lg font-medium">Bạn chưa chọn từ vựng nào.</p>
+                <p class="text-sm mt-2">Vui lòng quay lại tab Danh sách để tích chọn từ làm trắc nghiệm.</p>
+            </div>
+        `;
+        return;
+    }
+
+    if (qzShowScore) {
+        const percentage = (qzScore / qzData.length) * 100;
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl shadow-sm border border-slate-100 text-center animate-in">
+                <i data-lucide="trophy" class="w-16 h-16 text-yellow-400 mb-4"></i>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Hoàn thành!</h2>
+                <p class="text-slate-600 mb-6">Bạn đã trả lời đúng <span class="text-indigo-600 font-bold text-xl">${qzScore}</span> / ${qzData.length} câu hỏi.</p>
+                <div class="w-full bg-slate-100 rounded-full h-4 mb-8 overflow-hidden">
+                    <div class="bg-indigo-500 h-4 rounded-full transition-all duration-1000" style="width: ${percentage}%"></div>
                 </div>
-            `;
-        }
-
-        window.fcToggleFlip = () => {
-            fcFlipped = !fcFlipped;
-            const cardInner = document.getElementById('fc-card-inner');
-            if(cardInner) {
-                fcFlipped ? cardInner.classList.add('rotate-y-180') : cardInner.classList.remove('rotate-y-180');
-            }
-        };
-
-        window.fcNext = () => {
-            fcFlipped = false;
-            setTimeout(() => {
-                fcIndex = (fcIndex + 1) % fcData.length;
-                renderMainContent();
-            }, 150);
-        };
-
-        window.fcPrev = () => {
-            fcFlipped = false;
-            setTimeout(() => {
-                fcIndex = (fcIndex - 1 + fcData.length) % fcData.length;
-                renderMainContent();
-            }, 150);
-        };
-
-        window.fcShuffle = () => {
-            fcData = shuffleArray(fcData);
-            fcIndex = 0;
-            fcFlipped = false;
-            renderMainContent();
-        };
-
-        // --- 3. QUIZ VIEW ---
-        let qzData = [];
-        let qzIndex = 0;
-        let qzScore = 0;
-        let qzShowScore = false;
-        let qzOptions = [];
-        let qzSelected = null;
-
-        function renderQuizView(container) {
-            let studyData = getStudyData();
-            if (studyData.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-20 text-slate-500">
-                        <i data-lucide="trophy" class="w-16 h-16 mb-4 text-slate-300"></i>
-                        <p class="text-lg font-medium">Bạn chưa chọn từ vựng nào.</p>
-                        <p class="text-sm mt-2">Vui lòng quay lại tab Danh sách để tích chọn từ làm trắc nghiệm.</p>
-                    </div>`;
-                return;
-            }
-
-            // Initialize Quiz Data if empty or switching back
-            if(qzData.length === 0 || qzData.length !== studyData.length) {
-                qzData = [...studyData];
-                qzIndex = 0;
-                qzScore = 0;
-                qzShowScore = false;
-                qzSelected = null;
-            }
-
-            if (qzShowScore) {
-                const percentage = (qzScore / qzData.length) * 100;
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl shadow-sm border border-slate-100 text-center">
-                        <i data-lucide="trophy" class="w-16 h-16 text-yellow-400 mb-4"></i>
-                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Hoàn thành!</h2>
-                        <p class="text-slate-600 mb-6">Bạn đã trả lời đúng <span class="text-indigo-600 font-bold text-xl">${qzScore}</span> / ${qzData.length} câu hỏi.</p>
-                        <div class="w-full bg-slate-100 rounded-full h-4 mb-8 overflow-hidden">
-                            <div class="bg-indigo-500 h-4 rounded-full transition-all duration-1000" style="width: ${percentage}%"></div>
-                        </div>
-                        <div class="flex gap-4">
-                            <button onclick="qzRestart()" class="px-6 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
-                                <i data-lucide="rotate-cw" class="w-4 h-4"></i> Làm lại
-                            </button>
-                            <button onclick="qzShuffle()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2">
-                                <i data-lucide="shuffle" class="w-4 h-4"></i> Xáo trộn & Làm mới
-                            </button>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            const currentWord = qzData[qzIndex];
-            
-            // Generate options only if not already generated for current question
-            if(!qzSelected && qzOptions.length === 0) {
-                const distractors = vocabularyData
-                    .filter(item => item.id !== currentWord.id)
-                    .sort(() => 0.5 - Math.random())
-                    .slice(0, 3);
-                qzOptions = shuffleArray([currentWord, ...distractors]);
-            }
-
-            container.innerHTML = `
-                <div class="max-w-xl mx-auto">
-                    <div class="mb-6 flex justify-between items-center text-sm font-medium text-slate-500">
-                        <span>Câu hỏi ${qzIndex + 1}/${qzData.length}</span>
-                        <div class="flex items-center gap-4">
-                            <button onclick="qzShuffle()" class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors" title="Xáo trộn câu hỏi và làm lại từ đầu">
-                                <i data-lucide="shuffle" class="w-4 h-4"></i> <span class="hidden sm:inline">Xáo trộn</span>
-                            </button>
-                            <span>Điểm: ${qzScore}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-8 rounded-2xl shadow-lg border-b-4 border-indigo-100 mb-6 text-center">
-                        <h3 class="text-slate-500 text-sm uppercase tracking-wider mb-2">Từ vựng này nghĩa là gì?</h3>
-                        <h2 class="text-3xl font-bold text-indigo-700 mb-4 flex items-center justify-center gap-2">
-                            ${currentWord.word}
-                            <button onclick="speak('${currentWord.word.replace(/'/g, "\\'")}')" class="text-indigo-300 hover:text-indigo-500"><i data-lucide="volume-2" class="w-6 h-6"></i></button>
-                        </h2>
-                    </div>
-
-                    <div class="grid gap-3">
-                        ${qzOptions.map(option => {
-                            let btnClass = "bg-white hover:bg-slate-50 border-slate-200 text-slate-700";
-                            let iconHTML = '';
-
-                            if (qzSelected) {
-                                if (option.id === currentWord.id) {
-                                    btnClass = "bg-green-100 border-green-300 text-green-800";
-                                    iconHTML = '<i data-lucide="check" class="w-5 h-5 text-green-600"></i>';
-                                } else if (qzSelected.id === option.id) {
-                                    btnClass = "bg-red-100 border-red-300 text-red-800";
-                                    iconHTML = '<i data-lucide="x" class="w-5 h-5 text-red-600"></i>';
-                                } else {
-                                    btnClass = "bg-slate-50 border-slate-100 text-slate-300";
-                                }
-                            }
-
-                            return `
-                                <button
-                                    ${qzSelected ? 'disabled' : ''}
-                                    onclick="qzHandleAnswer(${option.id})"
-                                    class="w-full p-4 rounded-xl border-2 text-left font-medium transition-all transform active:scale-[0.99] flex justify-between items-center ${btnClass}"
-                                >
-                                    <span>${option.meaning}</span>
-                                    ${iconHTML}
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
+                <div class="flex gap-4">
+                    <button onclick="qzRestart()" class="px-6 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-lg font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <i data-lucide="rotate-cw" class="w-4 h-4"></i> Làm lại
+                    </button>
+                    <button onclick="qzShuffle()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i> Xáo trộn & Làm mới
+                    </button>
                 </div>
-            `;
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    const currentWord = qzData[qzCurrentQuestion];
+    
+    let optionsHtml = qzOptions.map(option => {
+        let btnClass = "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 cursor-pointer";
+        let iconHtml = "";
+
+        if (qzSelectedOption) {
+            btnClass = "bg-slate-50 border-slate-100 text-slate-300 cursor-default"; // Trạng thái bị vô hiệu hóa
+            if (option.id === currentWord.id) {
+                btnClass = "bg-green-100 border-green-300 text-green-800 cursor-default";
+                iconHtml = `<i data-lucide="check" class="w-5 h-5 text-green-600"></i>`;
+            } else if (qzSelectedOption.id === option.id) {
+                btnClass = "bg-red-100 border-red-300 text-red-800 cursor-default";
+                iconHtml = `<i data-lucide="x" class="w-5 h-5 text-red-600"></i>`;
+            }
         }
 
-        window.qzHandleAnswer = (optionId) => {
-            if (qzSelected) return;
-            
-            const currentWord = qzData[qzIndex];
-            qzSelected = qzOptions.find(o => o.id === optionId);
-            
-            if (qzSelected.id === currentWord.id) {
-                qzScore++;
-                speak("Correct");
-            } else {
-                speak("Wrong");
-            }
+        const onClickAttr = qzSelectedOption ? "" : `onclick="qzHandleAnswer(${option.id})"`;
 
-            renderMainContent(); // Update UI to show colors
+        return `
+            <button ${onClickAttr} class="w-full p-4 rounded-xl border-2 text-left font-medium transition-all transform active:scale-[0.99] flex justify-between items-center ${btnClass}">
+                <span>${option.meaning}</span>
+                ${iconHtml}
+            </button>
+        `;
+    }).join('');
 
-            setTimeout(() => {
-                qzIndex++;
-                qzOptions = []; // Reset options for next question
-                qzSelected = null;
-                
-                if (qzIndex >= qzData.length) {
-                    qzShowScore = true;
-                }
-                renderMainContent();
-            }, 1500);
-        };
-
-        window.qzRestart = () => {
-            qzScore = 0;
-            qzIndex = 0;
-            qzShowScore = false;
-            qzOptions = [];
-            qzSelected = null;
-            renderMainContent();
-        };
-
-        window.qzShuffle = () => {
-            qzData = shuffleArray([...getStudyData()]);
-            qzRestart();
-        };
-
-        // --- 4. WRITING VIEW ---
-        let wrData = [];
-        let wrIndex = 0;
-        let wrInput = '';
-        let wrStatus = 'typing'; // typing, correct, incorrect, revealed
-        let wrHint = '';
-
-        function renderWritingView(container) {
-            let studyData = getStudyData();
-            if (studyData.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-20 text-slate-500">
-                        <i data-lucide="pen-tool" class="w-16 h-16 mb-4 text-slate-300"></i>
-                        <p class="text-lg font-medium">Bạn chưa chọn từ vựng nào.</p>
-                        <p class="text-sm mt-2">Vui lòng quay lại tab Danh sách để tích chọn từ luyện viết.</p>
-                    </div>`;
-                return;
-            }
-
-            if (wrData.length === 0 || wrData.length !== studyData.length) {
-                wrData = shuffleArray([...studyData]);
-                wrIndex = 0;
-                wrInput = '';
-                wrStatus = 'typing';
-                wrHint = '';
-            }
-
-            if(wrIndex >= wrData.length) wrIndex = 0;
-            const currentWord = wrData[wrIndex];
-
-            // Input classes based on status
-            let inputClasses = 'border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50';
-            let iconHTML = '';
-            
-            if (wrStatus === 'correct') {
-                inputClasses = 'border-green-500 bg-green-50 text-green-700';
-                iconHTML = '<i data-lucide="check" class="w-6 h-6 text-green-600"></i>';
-            } else if (wrStatus === 'incorrect') {
-                inputClasses = 'border-red-400 bg-red-50 text-red-700 animate-shake';
-                iconHTML = '<i data-lucide="x" class="w-6 h-6 text-red-600"></i>';
-            } else if (wrStatus === 'revealed') {
-                inputClasses = 'border-yellow-400 bg-yellow-50 text-yellow-700';
-            }
-
-            container.innerHTML = `
-                <div class="max-w-xl mx-auto flex flex-col items-center">
-                    <div class="w-full mb-6 flex justify-between items-center text-sm font-medium text-slate-500">
-                        <span>Từ ${wrIndex + 1}/${wrData.length}</span>
-                    </div>
-
-                    <div class="w-full bg-white p-8 rounded-2xl shadow-lg border-b-4 border-indigo-100 mb-8 text-center relative overflow-hidden">
-                        <span class="absolute top-4 right-4 text-xs font-bold text-slate-300 uppercase tracking-wider">${currentWord.type}</span>
-                        <h3 class="text-slate-500 text-sm uppercase tracking-wider mb-2">Hãy viết từ tiếng Anh cho:</h3>
-                        <h2 class="text-3xl font-bold text-indigo-700 mb-4">${currentWord.meaning}</h2>
-                    </div>
-
-                    <form onsubmit="wrCheckAnswer(event)" class="w-full relative">
-                        <input
-                            id="wr-input-field"
-                            type="text"
-                            value="${wrInput}"
-                            oninput="wrInput = this.value"
-                            placeholder="Nhập từ tiếng Anh..."
-                            ${(wrStatus === 'correct' || wrStatus === 'revealed') ? 'disabled' : ''}
-                            class="w-full p-4 pl-6 pr-14 text-xl rounded-xl border-2 outline-none transition-all shadow-sm ${inputClasses}"
-                            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                        />
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2">
-                            ${iconHTML}
-                        </div>
-                    </form>
-
-                    <div class="mt-6 w-full flex flex-col items-center gap-4">
-                        ${wrStatus === 'incorrect' ? `
-                            <div class="w-full bg-red-50 border border-red-100 p-4 rounded-xl text-center">
-                                <div class="text-red-600 font-bold mb-1 flex items-center justify-center gap-2">
-                                    <i data-lucide="alert-circle" class="w-5 h-5"></i> Chưa chính xác!
-                                </div>
-                                <p class="text-slate-600 text-sm mb-2">Gợi ý sửa lỗi (hãy điền tiếp):</p>
-                                <p class="font-mono text-2xl tracking-widest text-indigo-600 font-bold bg-white inline-block px-4 py-1 rounded border border-indigo-100">
-                                    ${wrHint}
-                                </p>
-                            </div>
-                        ` : ''}
-
-                        ${wrStatus === 'correct' ? `
-                            <div class="flex flex-col items-center">
-                                <p class="text-green-600 font-bold text-lg mb-2">Chính xác!</p>
-                                <p class="text-slate-500 italic mb-4">"${currentWord.example}"</p>
-                                <button onclick="wrNextWord()" class="px-8 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-2">
-                                    Tiếp tục <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        ` : ''}
-
-                        ${wrStatus === 'revealed' ? `
-                            <div class="flex flex-col items-center">
-                                <p class="text-yellow-600 font-medium mb-4">Đáp án là: <span class="font-bold">${currentWord.word}</span></p>
-                                <button onclick="wrNextWord()" class="px-8 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
-                                    Từ tiếp theo <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                        ` : ''}
-
-                        ${(wrStatus === 'typing' || wrStatus === 'incorrect') ? `
-                            <div class="flex gap-3 w-full">
-                                <button type="button" onclick="wrGiveUp()" class="flex-1 py-3 text-slate-400 hover:text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors">
-                                    Không biết
-                                </button>
-                                <button onclick="wrCheckAnswer(event)" class="flex-[2] py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-all active:scale-95">
-                                    ${wrStatus === 'incorrect' ? 'Kiểm tra lại' : 'Kiểm tra'}
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
+    container.innerHTML = `
+        <div class="max-w-xl mx-auto">
+            <div class="mb-6 flex justify-between items-center text-sm font-medium text-slate-500">
+                <span>Câu hỏi ${qzCurrentQuestion + 1}/${qzData.length}</span>
+                <div class="flex items-center gap-4">
+                    <button onclick="qzShuffle()" class="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors" title="Xáo trộn câu hỏi và làm lại từ đầu">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i> <span class="hidden sm:inline">Xáo trộn</span>
+                    </button>
+                    <span>Điểm: ${qzScore}</span>
                 </div>
-            `;
+            </div>
 
-            // Auto focus input if needed
-            if (wrStatus === 'typing' || wrStatus === 'incorrect') {
-                setTimeout(() => {
-                    const input = document.getElementById('wr-input-field');
-                    if (input) {
-                        input.focus();
-                        // Put cursor at end of input
-                        const val = input.value;
-                        input.value = '';
-                        input.value = val;
-                    }
-                }, 0);
-            }
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-b-4 border-indigo-100 mb-6 text-center">
+                <h3 class="text-slate-500 text-sm uppercase tracking-wider mb-2">Từ vựng này nghĩa là gì?</h3>
+                <h2 class="text-3xl font-bold text-indigo-700 mb-4 flex items-center justify-center gap-2">
+                    ${currentWord.word}
+                    <button onclick="speak('${currentWord.word.replace(/'/g, "\\'")}')" class="text-indigo-300 hover:text-indigo-500"><i data-lucide="volume-2" class="w-6 h-6"></i></button>
+                </h2>
+            </div>
+
+            <div class="grid gap-3">
+                ${optionsHtml}
+            </div>
+        </div>
+    `;
+    lucide.createIcons();
+}
+
+function qzHandleAnswer(optionId) {
+    if (qzSelectedOption) return;
+
+    qzSelectedOption = qzOptions.find(o => o.id === optionId);
+    const currentWord = qzData[qzCurrentQuestion];
+
+    if (qzSelectedOption.id === currentWord.id) {
+        qzScore++;
+        speak("Correct");
+    } else {
+        speak("Wrong");
+    }
+
+    updateQuizDOM();
+
+    setTimeout(() => {
+        qzCurrentQuestion++;
+        if (qzCurrentQuestion < qzData.length) {
+            generateQuizOptions();
+            updateQuizDOM();
+        } else {
+            qzShowScore = true;
+            updateQuizDOM();
+        }
+    }, 1500);
+}
+
+function qzRestart() {
+    qzCurrentQuestion = 0;
+    qzScore = 0;
+    qzShowScore = false;
+    generateQuizOptions();
+    updateQuizDOM();
+}
+
+function qzShuffle() {
+    qzData = shuffleArray(qzData);
+    qzRestart();
+}
+
+
+// ==========================================
+// VIEW 4: WRITING
+// ==========================================
+let wrData = [];
+let wrCurrentIndex = 0;
+let wrInput = '';
+let wrStatus = 'typing'; // typing, correct, incorrect, revealed
+let wrCorrectionHint = '';
+
+function renderWritingView(container) {
+    wrData = shuffleArray(getStudyData());
+    wrCurrentIndex = 0;
+    wrInput = '';
+    wrStatus = 'typing';
+    wrCorrectionHint = '';
+    updateWritingDOM(container);
+}
+
+function updateWritingDOM(container = document.getElementById('app-main')) {
+    if (wrData.length === 0) {
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 text-slate-500">
+                <i data-lucide="pen-tool" class="w-16 h-16 mb-4 text-slate-300"></i>
+                <p class="text-lg font-medium">Bạn chưa chọn từ vựng nào.</p>
+                <p class="text-sm mt-2">Vui lòng quay lại tab Danh sách để tích chọn từ luyện viết.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const currentWord = wrData[wrCurrentIndex];
+    
+    // Xử lý Input class và icon theo status
+    let inputClasses = 'border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50';
+    let statusIconHtml = '';
+    let disabledAttr = '';
+    
+    if (wrStatus === 'correct') {
+        inputClasses = 'border-green-500 bg-green-50 text-green-700';
+        statusIconHtml = `<i data-lucide="check" class="w-6 h-6 text-green-600"></i>`;
+        disabledAttr = 'disabled';
+    } else if (wrStatus === 'incorrect') {
+        inputClasses = 'border-red-400 bg-red-50 text-red-700 animate-shake';
+        statusIconHtml = `<i data-lucide="x" class="w-6 h-6 text-red-600"></i>`;
+    } else if (wrStatus === 'revealed') {
+        inputClasses = 'border-yellow-400 bg-yellow-50 text-yellow-700';
+        disabledAttr = 'disabled';
+    }
+
+    let messageHtml = '';
+    if (wrStatus === 'incorrect') {
+        messageHtml = `
+            <div class="w-full bg-red-50 border border-red-100 p-4 rounded-xl text-center animate-in">
+                <div class="text-red-600 font-bold mb-1 flex items-center justify-center gap-2">
+                    <i data-lucide="alert-circle" class="w-5 h-5"></i> Chưa chính xác!
+                </div>
+                <p class="text-slate-600 text-sm mb-2">Gợi ý sửa lỗi (hãy điền tiếp):</p>
+                <p class="font-mono text-2xl tracking-widest text-indigo-600 font-bold bg-white inline-block px-4 py-1 rounded border border-indigo-100">
+                    ${wrCorrectionHint}
+                </p>
+            </div>
+        `;
+    } else if (wrStatus === 'correct') {
+        messageHtml = `
+            <div class="flex flex-col items-center animate-in">
+                <p class="text-green-600 font-bold text-lg mb-2">Chính xác!</p>
+                <p class="text-slate-500 italic mb-4">"${currentWord.example}"</p>
+                <button onclick="wrNextWord()" class="px-8 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all flex items-center gap-2">
+                    Tiếp tục <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        `;
+    } else if (wrStatus === 'revealed') {
+        messageHtml = `
+            <div class="flex flex-col items-center animate-in">
+                <p class="text-yellow-600 font-medium mb-4">Đáp án là: <span class="font-bold">${currentWord.word}</span></p>
+                <button onclick="wrNextWord()" class="px-8 py-3 bg-indigo-600 text-white rounded-full font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
+                    Từ tiếp theo <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    let buttonsHtml = '';
+    if (wrStatus === 'typing' || wrStatus === 'incorrect') {
+        buttonsHtml = `
+            <div class="flex gap-3 w-full">
+                <button type="button" onclick="wrGiveUp()" class="flex-1 py-3 text-slate-400 hover:text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors">
+                    Không biết
+                </button>
+                <button onclick="wrCheckAnswer(event)" class="flex-[2] py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-all active:scale-95">
+                    ${wrStatus === 'incorrect' ? 'Kiểm tra lại' : 'Kiểm tra'}
+                </button>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="max-w-xl mx-auto flex flex-col items-center">
+            <div class="w-full mb-6 flex justify-between items-center text-sm font-medium text-slate-500">
+                <span>Từ ${wrCurrentIndex + 1}/${wrData.length}</span>
+            </div>
+
+            <div class="w-full bg-white p-8 rounded-2xl shadow-lg border-b-4 border-indigo-100 mb-8 text-center relative overflow-hidden">
+                <span class="absolute top-4 right-4 text-xs font-bold text-slate-300 uppercase tracking-wider">${currentWord.type}</span>
+                <h3 class="text-slate-500 text-sm uppercase tracking-wider mb-2">Hãy viết từ tiếng Anh cho:</h3>
+                <h2 class="text-3xl font-bold text-indigo-700 mb-4">${currentWord.meaning}</h2>
+            </div>
+
+            <form onsubmit="wrCheckAnswer(event)" class="w-full relative">
+                <input 
+                    id="wr-input"
+                    type="text" 
+                    value="${wrInput}"
+                    placeholder="Nhập từ tiếng Anh..." 
+                    ${disabledAttr}
+                    oninput="wrInput = this.value"
+                    class="w-full p-4 pl-6 pr-14 text-xl rounded-xl border-2 outline-none transition-all shadow-sm ${inputClasses}"
+                    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                >
+                <div class="absolute right-4 top-1/2 -translate-y-1/2">
+                    ${statusIconHtml}
+                </div>
+            </form>
+
+            <div class="mt-6 w-full flex flex-col items-center gap-4">
+                ${messageHtml}
+                ${buttonsHtml}
+            </div>
+        </div>
+    `;
+
+    lucide.createIcons();
+    
+    // Tự động focus input
+    const inputEl = document.getElementById('wr-input');
+    if (inputEl && (wrStatus === 'typing' || wrStatus === 'incorrect')) {
+        inputEl.focus();
+        // Đặt con trỏ về cuối text
+        const val = inputEl.value;
+        inputEl.value = '';
+        inputEl.value = val;
+    }
+}
+
+function wrCheckAnswer(e) {
+    if(e) e.preventDefault();
+    if (wrStatus !== 'typing' && wrStatus !== 'incorrect') {
+        wrNextWord();
+        return;
+    }
+
+    const currentWord = wrData[wrCurrentIndex];
+    const normalizedInput = wrInput.trim().toLowerCase();
+    const normalizedTarget = currentWord.word.trim().toLowerCase();
+
+    if (normalizedInput === normalizedTarget) {
+        wrStatus = 'correct';
+        wrCorrectionHint = '';
+        speak("Correct");
+    } else {
+        wrStatus = 'incorrect';
+        speak("Try again");
+        
+        let hint = '';
+        let mismatchIndex = 0;
+        while (
+            mismatchIndex < normalizedInput.length && 
+            mismatchIndex < normalizedTarget.length && 
+            normalizedInput[mismatchIndex] === normalizedTarget[mismatchIndex]
+        ) {
+            hint += currentWord.word[mismatchIndex] + ' ';
+            mismatchIndex++;
         }
 
-        window.wrCheckAnswer = (e) => {
-            if(e) e.preventDefault();
-            if (wrStatus !== 'typing' && wrStatus !== 'incorrect') return wrNextWord();
-
-            const currentWord = wrData[wrIndex];
-            const normalizedInput = wrInput.trim().toLowerCase();
-            const normalizedTarget = currentWord.word.trim().toLowerCase();
-
-            if (normalizedInput === normalizedTarget) {
-                wrStatus = 'correct';
-                wrHint = '';
-                speak("Correct");
-            } else {
-                wrStatus = 'incorrect';
-                speak("Try again");
-                
-                // Logic tạo gợi ý sửa lỗi
-                let hint = '';
-                let mismatchIndex = 0;
-                while (mismatchIndex < normalizedInput.length && mismatchIndex < normalizedTarget.length && normalizedInput[mismatchIndex] === normalizedTarget[mismatchIndex]) {
-                    hint += currentWord.word[mismatchIndex] + ' ';
-                    mismatchIndex++;
-                }
-
-                if (mismatchIndex < normalizedTarget.length) {
-                    hint += currentWord.word[mismatchIndex] + ' ';
-                    const remainingLength = normalizedTarget.length - mismatchIndex - 1;
-                    if (remainingLength > 0) {
-                        hint += '_ '.repeat(remainingLength);
-                    }
-                }
-                wrHint = hint.trim();
+        if (mismatchIndex < normalizedTarget.length) {
+            hint += currentWord.word[mismatchIndex] + ' ';
+            const remainingLength = normalizedTarget.length - mismatchIndex - 1;
+            if (remainingLength > 0) {
+                hint += '_ '.repeat(remainingLength);
             }
-            renderMainContent();
-        };
+        }
+        wrCorrectionHint = hint.trim();
+    }
+    updateWritingDOM();
+}
 
-        window.wrNextWord = () => {
-            if (wrIndex < wrData.length - 1) {
-                wrIndex++;
-            } else {
-                alert("Chúc mừng! Bạn đã hoàn thành vòng luyện viết.");
-                wrIndex = 0;
-                wrData = shuffleArray([...getStudyData()]);
-            }
-            wrInput = '';
-            wrStatus = 'typing';
-            wrHint = '';
-            renderMainContent();
-        };
+function wrNextWord() {
+    if (wrCurrentIndex < wrData.length - 1) {
+        wrCurrentIndex++;
+        wrInput = '';
+        wrStatus = 'typing';
+        wrCorrectionHint = '';
+    } else {
+        alert("Chúc mừng! Bạn đã hoàn thành vòng luyện viết.");
+        wrCurrentIndex = 0;
+        wrInput = '';
+        wrStatus = 'typing';
+        wrCorrectionHint = '';
+        wrData = shuffleArray(wrData); // Xáo trộn lại cho lượt mới
+    }
+    updateWritingDOM();
+}
 
-        window.wrGiveUp = () => {
-            const currentWord = wrData[wrIndex];
-            wrStatus = 'revealed';
-            speak(currentWord.word);
-            wrInput = currentWord.word;
-            wrHint = '';
-            renderMainContent();
-        };
+function wrGiveUp() {
+    const currentWord = wrData[wrCurrentIndex];
+    wrStatus = 'revealed';
+    speak(currentWord.word);
+    wrInput = currentWord.word;
+    wrCorrectionHint = '';
+    updateWritingDOM();
+}
 
-        // --- GLOBAL KEYBOARD LISTENERS (For Flashcards) ---
-        window.addEventListener('keydown', (e) => {
-            if (activeTab === 'flashcard' && getStudyData().length > 0) {
-                if (e.key === 'ArrowRight') fcNext();
-                if (e.key === 'ArrowLeft') fcPrev();
-                if (e.key === ' ' || e.key === 'Enter') {
-                    e.preventDefault(); // Prevent page scroll on space
-                    fcToggleFlip();
-                }
-            }
-        });
+// Khởi tạo ban đầu
+document.addEventListener('DOMContentLoaded', () => {
+    switchTab('list');
+});
 
-        // --- INITIALIZATION ---
-        renderNav();
-        renderMainContent();
-
-    </script>
+</script>
 </body>
 </html>
